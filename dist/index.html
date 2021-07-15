@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Demo Arbol</title>
+  </head>
+  <body>
+    <div id="cy"></div>
+    <script>
+      console.log("X_X");
+      const d=[
+        {
+          'id':"test1",
+          'parentId':0,
+          'title':"",
+          "titleCurrRef": "",
+          "titleLastRef": "",
+          "name":"",
+          "status":"",
+          "statusCurrRef":"",
+          "statusLastRef":""
+        },
+        {
+          'id':"test2",
+          'parentId':0,
+          'title':"",
+          "titleCurrRef": "",
+          "titleLastRef": "",
+          "name":"",
+          "status":"",
+          "statusCurrRef":"",
+          "statusLastRef":""
+        }
+      ];
+      document.addEventListener('change',
+        (e)=>{
+          ['input','select'].forEach( selector=>{
+            if(e.target.closest(selector)!==null){
+              const elem = e.target.closest(selector);
+              console.log(elem);
+              console.log(elem.value);
+            }
+          })
+        }
+      );
+      document.addEventListener('node-added',(e)=>{console.log("Node Added");console.log(e);console.log(e.detail)});
+      document.addEventListener('node-moved',(e)=>{console.log("Node Moved");console.log(e);console.log(e.detail)});
+      document.addEventListener('node-removed',(e)=>{console.log("Node Removed");console.log(e);console.log(e.detail)});
+    </script>
+    <script src="./bundle.js"></script>
+  </body>
+</html>
