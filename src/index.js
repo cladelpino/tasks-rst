@@ -2,4 +2,4 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 
-ReactDOM.render(<App d={d}/>,document.getElementById('cy'));
+ReactDOM.render(<App d={JSON.parse(d)}/>,document.getElementById('cy'));

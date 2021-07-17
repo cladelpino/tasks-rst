@@ -1,22 +1,55 @@
 import React, { Component } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import SortableTree, { addNodeUnderParent, removeNodeAtPath, changeNodeAtPath, getDescendantCount, getTreeFromFlatData } from '@nosferatu500/react-sortable-tree';
+import SortableTree, { addNodeUnderParent, removeNodeAtPath, changeNodeAtPath, getDescendantCount, getTreeFromFlatData, insertNode} from '@nosferatu500/react-sortable-tree';
 import '@nosferatu500/react-sortable-tree/style.css'; // This only needs to be imported once in your app
+import {DebounceInput} from 'react-debounce-input';
 
 export default class Tree extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      treeData: getTreeFromFlatData({flatData:props.d}),
+      // treeData: getTreeFromFlatData({flatData:props.d}),
+      treeData:props.d,
       addAsFirstChild: false,
     };
+    this.getNodeKey = ({ treeIndex }) => treeIndex;
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot){
+    console.log("Comp Update");
+    console.log(this.state.treeData);
+    document.dispatchEvent(new CustomEvent(`all-data-changed`,{'detail':this.state.treeData}));
+  }
+
+
+  handleNodeFieldChange(fieldName,node,path,event){
+      const getNodeKey = this.getNodeKey;
+      console.log(event.target.value);
+      const nowVal = event.target.value;
+      const newNode = {...node};
+      newNode[fieldName] = nowVal;
+      this.setState(state => ({
+          treeData: changeNodeAtPath({
+              treeData: state.treeData,
+              path,
+              getNodeKey,
+              newNode: newNode,
+          }),
+      }));
+      // document.dispatchEvent(new CustomEvent(`node-${fieldName}-changed`,{'detail':{
+      //  'nodeid':node.id,'field':fieldName,'lastVal':node[fieldName],'nextVal':nowVal
+      // }}));
   }
 
   render() {
-    const getNodeKey = ({ treeIndex }) => treeIndex;
+    const getNodeKey = this.getNodeKey;
     // const getNodeKey = ({ treeIndex,node }) => node.id;
     return (
-      <div style={{ height: "95vh" }}>
+      <div style={
+        {
+          height: "95vh",
+          backgroundColor:"#c0c0a0"
+        }}>
         <SortableTree
           treeData={this.state.treeData}
           onChange={(treeData) =>{
@@ -26,53 +59,34 @@ export default class Tree extends Component {
           }}
           rowHeight={({treeIndex,node,path})=>getDescendantCount({'node':node,'ignoreCollapsed':false}) == 0 ? 100:60}
           onMoveNode={({ treeData, node, nextParentNode, prevPath, prevTreeIndex, nextPath, nextTreeIndex})=>{
-            document.dispatchEvent(new CustomEvent('node-moved',{'detail':{'nodeid':node.id,'nextParent':nextParentNode===null?0:nextParentNode}}));
+            // document.dispatchEvent(new CustomEvent('node-moved',{'detail':{
+              // 'nodeid':node.id,'nextParent':nextParentNode===null?0:nextParentNode
+            // }}));
           }}
           generateNodeProps={({ node, path }) => ({
+            style: {
+              backgroundColor: node.status=="W"?"#cadcad":"#fafafa"
+            },
             title: (
                 <div>
-                    <input 
-                      data-action="synced-input"
+                    <DebounceInput
+                      debounceTimeout={500}
                       node-id={node.id}
-                      last-ref={node.titleLastRef}
-                      curr-ref={node.titleCurrRef}
                       style={{ fontSize: '1.1rem' }}
                       value={node.title}
-                      onChange={event => {
-                        const nowTitle = event.target.value;
-                        const nowRef = uuidv4();
-                        this.setState(state => ({
-                          treeData: changeNodeAtPath({
-                            treeData: state.treeData,
-                            path,
-                            getNodeKey,
-                            newNode: { ...node, titleLastRef:node.titleCurrRef, titleCurrRef: nowRef, title:nowTitle },
-                          }),
-                        }));
-                      }}
+                      onChange = {event=>this.handleNodeFieldChange('title',node,path,event)}
                     />
-                    {getDescendantCount({'node':node,'ignoreCollapsed':false}) == 0 ? 
-                      <div>
-                        <label htmlFor={`status${node.id}`}>Status:</label>
+                    {getDescendantCount({'node':node,'ignoreCollapsed':false}) == 0 ?
+                      <div
+                        style={{backgroundColor: node.status=="W"?"#cadcad":"#fafafa"}}
+                      >
+                        {/* TODO: REFACTOR */}
+                        <label htmlFor={`status${node.id}`}>Status: </label>
                         <select 
                           name={`status${node.id}`}
-                          data-action="synced-input"
                           node-id={node.id}
-                          last-ref={node.statusLastRef}
-                          curr-ref={node.statusCurrRef}
                           value={node.status}
-                          onChange={event => {
-                            console.log(event.target.value);
-                            const nowVal = event.target.value;
-                            this.setState(state => ({
-                                treeData: changeNodeAtPath({
-                                    treeData: state.treeData,
-                                    path,
-                                    getNodeKey,
-                                    newNode: { ...node, statusLastRef : node.statusCurrRef, statusCurrRef:uuidv4(), status:nowVal },
-                                }),
-                            }));
-                        }}
+                          onChange={event=>this.handleNodeFieldChange('status',node,path,event)}
                         >
                           <option value="">Not worked on</option>
                           <option value="Wd">Worked on</option>
@@ -91,7 +105,7 @@ export default class Tree extends Component {
             buttons: [
               <button
                 onClick={() =>{
-                  const newObj = {title: "",name:"",id:uuidv4(),parent:node.id};
+                  const newObj = {title: "",name:"",id:uuidv4(),parentId:node.id};
                   console.log(path);
                   this.setState(state => ({
                     treeData: addNodeUnderParent({
@@ -100,34 +114,61 @@ export default class Tree extends Component {
                       expandParent: true,
                       getNodeKey,
                       newNode: newObj,
-                      addAsFirstChild: state.addAsFirstChild,
+                      addAsFirstChild: node.children.length>=3?true:false,
                     }).treeData,
                   }));
-                document.dispatchEvent(new CustomEvent('node-added',{detail: newObj}));
+                // document.dispatchEvent(new CustomEvent('node-added',{detail:
+                  // newObj
+                  // }));
               }
                 }
-              >
-              Add Child
-              </button>,
+              >Add Child</button>,
               <button
               onClick={() =>{
-                const newObj = {title: "",name:"",id:uuidv4(),parent:path.length==1?"":path};
+                const newObj = {
+                  title: "",
+                  name:"",
+                  id:uuidv4(),
+                  parentId:path.length==1?"":path
+                };
+                console.log(path);
                 this.setState(state => ({
-                  treeData: addNodeUnderParent({
+                  treeData: insertNode({
                     treeData: state.treeData,
-                    parentKey: path[path.length - 2],
+                    depth: path.length-1,
+                    minimumTreeIndex: path[path.length - 1],
+                    ignoreCollapsed:true,
                     expandParent: true,
                     getNodeKey,
-                    newNode: newObj,
-                    addAsFirstChild: state.addAsFirstChild,
+                    newNode: newObj
                   }).treeData,
                 }))
-                document.dispatchEvent(new CustomEvent('node-added',{detail: newObj}));
               }
               }
-              >
-              Add Sibling
-              </button>,
+              >Add Above</button>,
+              <button
+              onClick={() =>{
+                const newObj = {
+                  title: "",
+                  name:"",
+                  id:uuidv4(),
+                  parentId:path.length==1?"":path
+                };
+                console.log(path);
+                this.setState(state => ({
+                  treeData: insertNode({
+                    treeData: state.treeData,
+                    depth: path.length-1,
+                    minimumTreeIndex: path[path.length - 1]+1,
+                    ignoreCollapsed:true,
+                    expandParent: true,
+                    getNodeKey,
+                    newNode: newObj
+                  }).treeData,
+                }))
+              }
+              }
+              >Add Below</button>,
               <button
                 onClick={() =>{
                   this.setState(state => ({
@@ -137,7 +178,9 @@ export default class Tree extends Component {
                       getNodeKey,
                     }),
                   }))
-                document.dispatchEvent(new CustomEvent('node-removed',{detail: node.id}));
+                // document.dispatchEvent(new CustomEvent('node-removed',{detail:
+                //   node.id
+                // }));
                 }
                 }
               >
