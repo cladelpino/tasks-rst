@@ -57,7 +57,7 @@ export default class Tree extends Component {
             console.log("Sortable Tree Changed");
             // console.log(treeData);
           }}
-          rowHeight={({treeIndex,node,path})=>getDescendantCount({'node':node,'ignoreCollapsed':false}) == 0 ? 100:60}
+          rowHeight={({treeIndex,node,path})=>100}
           onMoveNode={({ treeData, node, nextParentNode, prevPath, prevTreeIndex, nextPath, nextTreeIndex})=>{
             // document.dispatchEvent(new CustomEvent('node-moved',{'detail':{
               // 'nodeid':node.id,'nextParent':nextParentNode===null?0:nextParentNode
@@ -76,8 +76,7 @@ export default class Tree extends Component {
                       value={node.title}
                       onChange = {event=>this.handleNodeFieldChange('title',node,path,event)}
                     />
-                    {getDescendantCount({'node':node,'ignoreCollapsed':false}) == 0 ?
-                      <div
+                    {<div
                         style={{backgroundColor: node.status=="W"?"#cadcad":"#fafafa"}}
                       >
                         {/* TODO: REFACTOR */}
@@ -97,12 +96,25 @@ export default class Tree extends Component {
                           <option value="Cy">Open (Cyclical)</option>
                         </select>
                       </div>
-                      :
-                      ""
                     }
                 </div>
               ),
             buttons: [
+              <div><div>
+              <label htmlFor={`startdate${node.id}`}>Start date:</label>
+              <input type="date"
+                id={`startdate${node.id}`}
+                value={node.startDate}
+                onChange = {event=>this.handleNodeFieldChange('startDate',node,path,event)}
+              ></input>
+              </div><div>
+              <label htmlFor={`enddate${node.id}`}>Due date:</label>
+              <input type="date"
+                id={`enddate${node.id}`}
+                value={node.endDate}
+                onChange = {event=>this.handleNodeFieldChange('endDate',node,path,event)}
+              ></input></div>
+              </div>,
               <button
                 onClick={() =>{
                   const newObj = {title: "",name:"",id:uuidv4(),parentId:node.id};
@@ -114,7 +126,7 @@ export default class Tree extends Component {
                       expandParent: true,
                       getNodeKey,
                       newNode: newObj,
-                      addAsFirstChild: node.children.length>=3?true:false,
+                      addAsFirstChild: typeof node.children !== "undefined" && node.children.length>=3?true:false,
                     }).treeData,
                   }));
                 // document.dispatchEvent(new CustomEvent('node-added',{detail:
@@ -123,52 +135,53 @@ export default class Tree extends Component {
               }
                 }
               >Add Child</button>,
-              <button
-              onClick={() =>{
-                const newObj = {
-                  title: "",
-                  name:"",
-                  id:uuidv4(),
-                  parentId:path.length==1?"":path
-                };
-                console.log(path);
-                this.setState(state => ({
-                  treeData: insertNode({
-                    treeData: state.treeData,
-                    depth: path.length-1,
-                    minimumTreeIndex: path[path.length - 1],
-                    ignoreCollapsed:true,
-                    expandParent: true,
-                    getNodeKey,
-                    newNode: newObj
-                  }).treeData,
-                }))
-              }
-              }
-              >Add Above</button>,
-              <button
-              onClick={() =>{
-                const newObj = {
-                  title: "",
-                  name:"",
-                  id:uuidv4(),
-                  parentId:path.length==1?"":path
-                };
-                console.log(path);
-                this.setState(state => ({
-                  treeData: insertNode({
-                    treeData: state.treeData,
-                    depth: path.length-1,
-                    minimumTreeIndex: path[path.length - 1]+1,
-                    ignoreCollapsed:true,
-                    expandParent: true,
-                    getNodeKey,
-                    newNode: newObj
-                  }).treeData,
-                }))
-              }
-              }
-              >Add Below</button>,
+              <div><div>
+                <button
+                  onClick={() =>{
+                    const newObj = {
+                      title: "",
+                      name:"",
+                      id:uuidv4(),
+                      parentId:path.length==1?"":path
+                    };
+                    console.log(path);
+                    this.setState(state => ({
+                      treeData: insertNode({
+                        treeData: state.treeData,
+                        depth: path.length-1,
+                        minimumTreeIndex: path[path.length - 1],
+                        ignoreCollapsed:true,
+                        expandParent: true,
+                        getNodeKey,
+                        newNode: newObj
+                      }).treeData,
+                    }))
+                  }}
+                  >Add Above
+                </button></div><div>
+                <button
+                  onClick={() =>{
+                    const newObj = {
+                      title: "",
+                      name:"",
+                      id:uuidv4(),
+                      parentId:path.length==1?"":path
+                    };
+                    console.log(path);
+                    this.setState(state => ({
+                      treeData: insertNode({
+                        treeData: state.treeData,
+                        depth: path.length-1,
+                        minimumTreeIndex: path[path.length - 1]+1,
+                        ignoreCollapsed:true,
+                        expandParent: true,
+                        getNodeKey,
+                        newNode: newObj
+                      }).treeData,
+                    }))
+                  }}
+                >Add Below</button>
+                </div></div>,
               <button
                 onClick={() =>{
                   this.setState(state => ({

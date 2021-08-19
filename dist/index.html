@@ -7,13 +7,15 @@
     <div id="cy"></div>
     <script>
       console.log("X_X");
-      const d=JSON.stringify([
+      const d=[
         {
           'id':"test1",
           'parentId':0,
           'title':"",
           "name":"",
           "status":"",
+          "startDate":"",
+          "endDate":""
         },
         {
           'id':"test2",
@@ -21,8 +23,10 @@
           'title':"",
           "name":"",
           "status":"",
+          "startDate":"",
+          "endDate":""
         }
-      ]);
+      ];
       document.addEventListener('all-data-changed',(e)=>{console.log("General Event Called");console.log(e);console.log(e.detail)});
       document.addEventListener('node-title-changed',(e)=>{console.log("Node Title Changed");console.log(e);console.log(e.detail)});
       document.addEventListener('node-status-changed',(e)=>{console.log("Node Status Changed");console.log(e);console.log(e.detail)});
